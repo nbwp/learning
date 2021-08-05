@@ -61,7 +61,7 @@ CHECKDIR:
 
 
 $(BIN):$(CCOBJS)
-	$(CC) $< -o $@ $(CFLAGS) -L$(LIBDIR) $(LFLAG)
+	$(CC) $^ -o $(BIN) $(CFLAGS) -L$(LIBDIR) $(LFLAG)
 
 
 
