@@ -1,10 +1,10 @@
 #指定编译器
 
-ARCH := arm
+ARCH := 
 ifeq ($(ARCH), arm)
-CC := arm-none-linux-gnueabi-gcc
+CC := arm-none-linux-gnueabi-g++
 else
-CC := gcc 
+CC := g++ 
 endif
 #gcc
 #arm-none-linux-gnueabi-gcc
@@ -24,11 +24,11 @@ SRCDIRS := $(shell find $(SUBDIR) -type d)
 
 #迭代搜索c文件
 #CXXSRCS := $(foreach dir,$(SRCDIRS),$(wildcard $(dir)/*.cpp))
-CCSRCS := $(foreach dir,$(SRCDIRS),$(wildcard $(dir)/*.c))
+CCSRCS := $(foreach dir,$(SRCDIRS),$(wildcard $(dir)/*.cpp))
 
 #.o文件
 #CXXOBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(notdir $(CXXSRCS)))
-CCOBJS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(CCSRCS)))
+CCOBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(notdir $(CCSRCS)))
 
 
 #依赖文件.d  .d文件里面存放的是 .o文件的依赖 包含.c文件 .h文件$(CXXOBJS) 
@@ -40,7 +40,7 @@ VPATH = $(SRCDIRS):$(TOPDIR)
 CFLAGS := -g -rdynamic -Wall $(patsubst %, -I%, $(HEADDIR))
 
 
-LFLAG := -lpthread -lrt
+LFLAG := -lpthread -lrt 
 #$(CXXOBJS) 
 all:CHECKDIR $(LIBS) $(BINDIR)/$(BIN) $(CCOBJS)  PRINT
 CHECKDIR:
@@ -65,7 +65,7 @@ $(BINDIR)/$(BIN):$(CCOBJS)
 
 
 
-$(OBJDIR)/%.o:%.c
+$(OBJDIR)/%.o:%.cpp
 	@echo "Compiling $< ==> $@"
 	$(CC) -c $^ -o $@ -MMD -MF $(OBJDIR)/$*.d -MP $(CFLAGS)
 
