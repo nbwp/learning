@@ -1,0 +1,225 @@
+/*多进程*/
+/*#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <time.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <errno.h>
+#include <ctype.h>
+#define MESLENGTH 2048
+void* read_func(void * arg){
+    int newfd,nbytes,i;
+    char buf[MESLENGTH];
+    
+    newfd = *((int *)arg);
+    free(arg);
+    while (1){
+        memset(buf, 0, sizeof(buf));
+        nbytes = read(newfd,buf,sizeof(buf));
+        if(nbytes == -1){
+            perror("read errro");
+            close(newfd);
+            exit(1);
+        }
+        else if(nbytes == 0){//主动断开连接
+            close(newfd);
+            exit(0);
+        }
+        else{
+            printf("I have receive:%s\n",buf);
+            for ( i = 0; i < nbytes; i++){
+                
+                buf[i] = toupper(buf[i]);    
+            }  
+            write(newfd, buf, sizeof(buf));
+            
+        }
+    }
+    
+}
+
+
+int main(int argc,char*argv[])
+{
+    int sockfd,newfd,ret,port;
+    pthread_t tid;
+    socklen_t addrlen,client_size;
+    
+    struct sockaddr_in servaddr,clientaddr;
+    int* pconn_socket;
+    if (argc != 2){
+        printf("参数不足/n");
+        exit(1);
+    }
+
+    pconn_socket = NULL;
+    port = atoi(argv[1]);
+    bzero(&servaddr,sizeof(struct sockaddr_in));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(port);
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addrlen = sizeof(struct sockaddr_in);
+    
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1){
+        perror("socket create error");
+        exit(1);
+    }
+    
+    bind(sockfd, (struct sockaddr *)(&servaddr), addrlen);   
+    
+    listen(sockfd, 128);
+    
+    while (1){
+        newfd = accept(sockfd, (struct sockaddr*)(&clientaddr), &client_size);
+        close(sockfd);
+        
+        if (newfd == -1){
+            perror("accept error");
+            exit(1);
+        }
+        pconn_socket = (int*)malloc(sizeof(int));
+        *pconn_socket = newfd;
+        ret = pthread_create(&tid,NULL,read_func,(void*)pconn_socket);
+           
+        if (ret < 0){
+            perror("thread create error");
+            exit(1);
+        }
+        
+        pthread_join(tid,NULL);
+    }    
+    
+    return 0;
+}*/
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <string.h>
+#include <pthread.h>
+#include <stdlib.h>
+#define RECVBUFSIZE 1024
+void *rec_func(void *arg)
+{
+ int sockfd,new_fd,nbytes;
+ char buffer[RECVBUFSIZE];
+ int i;
+ new_fd = *((int *) arg);
+ free(arg); 
+ 
+ while(1)
+ {
+  if((nbytes=recv(new_fd,buffer, RECVBUFSIZE,0))==-1)
+  {
+   fprintf(stderr,"Read Error:%s\n",strerror(errno));
+   exit(1);
+  }
+  if(nbytes == -1)
+  {//客户端出错了 返回值-1
+   close(new_fd);
+   break;   
+  }
+  if(nbytes == 0)
+  {//客户端主动断开连接，返回值是0
+   close(new_fd);
+   break;
+  }
+  buffer[nbytes]='\0'; 
+  printf("I have received:%s\n",buffer); 
+  
+  
+  if(send(new_fd,buffer,strlen(buffer),0)==-1)
+  {
+   fprintf(stderr,"Write Error:%s\n",strerror(errno));
+   exit(1);
+  }
+   
+ }
+
+}
+
+int main(int argc, char *argv[])
+{
+ char buffer[RECVBUFSIZE];
+ int sockfd,new_fd,nbytes;
+ struct sockaddr_in server_addr;
+ struct sockaddr_in client_addr;
+ int sin_size,portnumber;
+ char hello[]="Hello! Socket communication world!\n";
+ pthread_t tid;
+ int *pconnsocke = NULL;
+ int ret,i;
+ 
+ if(argc!=2)
+ {
+  fprintf(stderr,"Usage:%s portnumber\a\n",argv[0]);
+  exit(1);
+ }
+ /*端口号不对，退出*/
+ if((portnumber=atoi(argv[1]))<0)
+ {
+  fprintf(stderr,"Usage:%s portnumber\a\n",argv[0]);
+  exit(1);
+ }
+
+ /*服务器端开始建立socket描述符  sockfd用于监听*/
+ if((sockfd=socket(AF_INET,SOCK_STREAM,0))==-1)  
+ {
+  fprintf(stderr,"Socket error:%s\n\a",strerror(errno));
+  exit(1);
+ }
+ 
+ /*服务器端填充 sockaddr结构*/ 
+ bzero(&server_addr,sizeof(struct sockaddr_in));
+ server_addr.sin_family     =AF_INET;
+ /*自动填充主机IP*/
+ server_addr.sin_addr.s_addr=htonl(INADDR_ANY);//自动获取网卡地址
+ server_addr.sin_port       =htons(portnumber);
+ 
+ /*捆绑sockfd描述符*/ 
+ if(bind(sockfd,(struct sockaddr *)(&server_addr),sizeof(struct sockaddr))==-1)
+ {
+  fprintf(stderr,"Bind error:%s\n\a",strerror(errno));
+  exit(1);
+ }
+ 
+ /*监听sockfd描述符*/
+ if(listen(sockfd, 10)==-1)
+ {
+  fprintf(stderr,"Listen error:%s\n\a",strerror(errno));
+  exit(1);
+ }
+
+ while(1)
+ {
+  /*服务器阻塞，直到客户程序建立连接*/
+  sin_size=sizeof(struct sockaddr_in);
+  if((new_fd = accept(sockfd,(struct sockaddr *)&client_addr,&sin_size))==-1)
+  {
+   fprintf(stderr,"Accept error:%s\n\a",strerror(errno));
+   exit(1);
+  }
+  
+  pconnsocke = (int *) malloc(sizeof(int));
+  *pconnsocke = new_fd;
+  
+  ret = pthread_create(&tid, NULL, rec_func, (void *) pconnsocke);
+  if (ret < 0) 
+  {
+   perror("pthread_create err");
+   return -1;
+  } 
+ }
+ //close(sockfd);
+ exit(0);
+}
+    
+    
