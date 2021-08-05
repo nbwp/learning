@@ -13,7 +13,7 @@ endif
 TOPDIR := $(shell pwd)
 OBJDIR := $(TOPDIR)/obj
 BINDIR := $(TOPDIR)/bin
-BIN := $(notdir $(TOPDIR))
+#BIN := $(notdir $(TOPDIR))
 HEADDIR := $(TOPDIR)/incl
 LIBDIR := $(TOPDIR)/lib
 #源文件目录
@@ -29,8 +29,8 @@ CCSRCS := $(foreach dir,$(SRCDIRS),$(wildcard $(dir)/*.cpp))
 #.o文件
 #CXXOBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(notdir $(CXXSRCS)))
 CCOBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(notdir $(CCSRCS)))
-
-
+#一个test一个bin
+BIN := $(patsubst %.cpp,$(BINDIR)/%,$(notdir $(CCSRCS)))
 #依赖文件.d  .d文件里面存放的是 .o文件的依赖 包含.c文件 .h文件$(CXXOBJS) 
 DEPS := $(patsubst %.o,%.d,$(CCOBJS))
 
@@ -42,7 +42,7 @@ CFLAGS := -g -rdynamic -Wall $(patsubst %, -I%, $(HEADDIR))
 
 LFLAG := -lpthread -lrt 
 #$(CXXOBJS) 
-all:CHECKDIR $(LIBS) $(BINDIR)/$(BIN) $(CCOBJS)  PRINT
+all:CHECKDIR $(LIBS) $(BIN) $(CCOBJS)  PRINT
 CHECKDIR:
 #	@echo $(CCSRCS)
 	@echo $(CCOBJS)
@@ -60,8 +60,8 @@ CHECKDIR:
 
 
 
-$(BINDIR)/$(BIN):$(CCOBJS)
-	$(CC) $^ -o $@ $(CFLAGS) -L$(LIBDIR) $(LFLAG)
+$(BIN):$(CCOBJS)
+	$(CC) $< -o $@ $(CFLAGS) -L$(LIBDIR) $(LFLAG)
 
 
 
