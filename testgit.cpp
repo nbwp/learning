@@ -14,5 +14,6 @@ int main(int argc, char *argv[])
     cout << "hello" << endl;
     cout << "add" <<endl;
     cout << "add dapei" <<endl;
+    cout << "last add" << endl;
     return 0;
 }
