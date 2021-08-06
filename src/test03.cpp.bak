@@ -1,0 +1,24 @@
+#include <iostream>
+using namespace std;
+class test
+{
+private:
+    static int a ; //声明
+    static const int b = 100;//定义为常量
+public:
+    int add()
+    {
+        a += 100;
+        
+        return a ;
+    }
+
+};
+int test::a= 0;
+int main(int argc, char *argv[])
+{
+    test t,t1;
+    cout << t1.add();
+    cout << t.add();
+    return 0;
+}
