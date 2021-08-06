@@ -16,7 +16,7 @@ location::location(const location &p)
 }
 location::~location()
 {
-    cout << "析沟函数" << endl;
+    cout << "析构函数" << getX() << endl;
 };
 int location::getX()
 {
