@@ -20,7 +20,7 @@ struct mymesg
     char mtext[512];//消息数据
 };//c++中结构体叫类型
 #pragma pack(pop)
-int main()
+int main(int argc ,char *argv[])
 {
     
     //struct msqid_ds *ms;
@@ -37,13 +37,15 @@ int main()
     {
         exit(1);
     }
+
+    
     while (1)
     {
         char buf[512];
         memset(buf, 0, 512);
         msg1.mytype = 1;
         cout << "input message:";
-        cin.get(buf, '\n');
+        fgets(buf,sizeof(buf),stdin);
         strcpy(msg1.mtext,buf);
         if(msgsnd(msqid, (void *)&msg1, 512, 0) < 0){
             cout << "send msg errro" << endl; 
